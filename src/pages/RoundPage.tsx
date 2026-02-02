@@ -256,67 +256,95 @@ export default function RoundPage() {
     [roundPhase, pendingAction, resolveDealingAction, resolveActionCard, players],
   )
 
-  // Flip three auto-draw
-  const flipThreeTargetBusted = flipThreeState
-    ? roundStates[flipThreeState.targetPlayerIndex]?.isBusted
-    : false
+  // Flip three — chain all draws in a single effect
+  const flipThreeRef = useRef(false)
 
   useEffect(() => {
-    if (
-      roundPhase !== 'flip-three' ||
-      !flipThreeState ||
-      flipThreeState.cardsRemaining <= 0 ||
-      flipThreeTargetBusted ||
-      overlay
-    )
+    if (roundPhase !== 'flip-three' || !flipThreeState || flipThreeRef.current)
       return
 
-    const timer = setTimeout(() => {
-      const card = resolveFlipThreeCard()
-      if (!card) return
+    flipThreeRef.current = true
+    const targetIdx = flipThreeState.targetPlayerIndex
+    let drawIndex = 0
 
-      const store = useGameStore.getState()
-      const targetState =
-        store.session!.roundStates[flipThreeState.targetPlayerIndex]!
+    function drawNext() {
+      const timer = setTimeout(() => {
+        const store = useGameStore.getState()
+        const ft = store.session?.flipThreeState
+        if (!ft || ft.cardsRemaining <= 0) {
+          // All done — wait then advance
+          setTimeout(() => {
+            skipFlipThreeAction()
+            advanceToNextPlayer()
+          }, 2500)
+          return
+        }
 
-      if (targetState.isBusted) {
-        setTimeout(() => {
-          setOverlay({
-            type: 'bust',
-            playerName: players[flipThreeState.targetPlayerIndex]!.name,
-          })
-        }, 800)
-      } else if (
-        targetState.hasFlipSeven &&
-        targetState.numberCards.length === 7
-      ) {
-        const score = calculateScore(targetState)
-        setOverlay({
-          type: 'flip-seven',
-          playerName: players[flipThreeState.targetPlayerIndex]!.name,
-          score,
-        })
-      }
-    }, 1200)
+        const card = resolveFlipThreeCard()
+        if (!card) {
+          setTimeout(() => {
+            skipFlipThreeAction()
+            advanceToNextPlayer()
+          }, 2500)
+          return
+        }
 
-    return () => clearTimeout(timer)
-  }, [roundPhase, flipThreeState, flipThreeTargetBusted, overlay, resolveFlipThreeCard, players])
+        drawIndex++
+        const updated = useGameStore.getState()
+        const targetState = updated.session!.roundStates[targetIdx]!
 
-  // After flip three completes or target busted — advance to next player
+        if (targetState.isBusted) {
+          setTimeout(() => {
+            setOverlay({ type: 'bust', playerName: players[targetIdx]!.name })
+          }, 800)
+          return
+        }
+
+        if (targetState.hasFlipSeven && targetState.numberCards.length >= 7) {
+          const score = calculateScore(targetState)
+          setOverlay({ type: 'flip-seven', playerName: players[targetIdx]!.name, score })
+          return
+        }
+
+        // More cards to draw? Chain next
+        const ftAfter = updated.session!.flipThreeState
+        if (ftAfter && ftAfter.cardsRemaining > 0) {
+          drawNext()
+        } else {
+          // All done — wait then advance
+          setTimeout(() => {
+            skipFlipThreeAction()
+            advanceToNextPlayer()
+          }, 2500)
+        }
+      }, drawIndex === 0 ? 800 : 1200)
+    }
+
+    drawNext()
+
+    return () => { flipThreeRef.current = false }
+  }, [roundPhase, flipThreeState?.targetPlayerIndex, resolveFlipThreeCard, skipFlipThreeAction, advanceToNextPlayer, players])
+
+  // Bust/flipSeven during flip-three dismissed — clean up and advance
   useEffect(() => {
     if (
       flipThreeState &&
-      (flipThreeState.cardsRemaining <= 0 || flipThreeTargetBusted) &&
       roundPhase === 'flip-three' &&
-      !overlay
+      !overlay &&
+      flipThreeRef.current === false
     ) {
-      const timer = setTimeout(() => {
-        skipFlipThreeAction()
-        advanceToNextPlayer()
-      }, 2500)
-      return () => clearTimeout(timer)
+      // Overlay was just dismissed, advance now
+      const store = useGameStore.getState()
+      const targetState = store.session?.roundStates[flipThreeState.targetPlayerIndex]
+      if (targetState?.isBusted || targetState?.hasFlipSeven) {
+        const timer = setTimeout(() => {
+          skipFlipThreeAction()
+          advanceToNextPlayer()
+        }, 500)
+        return () => clearTimeout(timer)
+      }
     }
-  }, [flipThreeState, flipThreeTargetBusted, roundPhase, overlay, skipFlipThreeAction, advanceToNextPlayer])
+  }, [flipThreeState, roundPhase, overlay, skipFlipThreeAction, advanceToNextPlayer])
 
   // Second chance handlers
   const handleUseSecondChance = useCallback(() => {
