@@ -115,8 +115,8 @@ export default function ActionCardModal({
                             key={c.id}
                             className="w-5 h-6 flex items-center justify-center border border-foreground/25 rounded text-[10px] font-heading font-700 leading-none"
                             style={{
-                              backgroundColor: numberCardColors[c.value] ?? '#fff',
-                              color: lightValues.has(c.value) ? 'var(--color-foreground)' : '#fff',
+                              backgroundColor: numberCardColors[c.value ?? 0] ?? '#fff',
+                              color: lightValues.has(c.value ?? 0) ? 'var(--color-foreground)' : '#fff',
                             }}
                           >
                             {c.value}

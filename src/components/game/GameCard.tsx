@@ -72,8 +72,9 @@ export default function GameCard({
     }
 
     if (card.type === 'number') {
-      const bgColor = numberCardColors[card.value] ?? '#FFFFFF'
-      const isLight = lightValues.has(card.value)
+      const val = card.value ?? 0
+      const bgColor = numberCardColors[val] ?? '#FFFFFF'
+      const isLight = lightValues.has(val)
       return (
         <div
           className="w-full h-full rounded-[14px] flex items-center justify-center"
