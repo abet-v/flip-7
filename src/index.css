@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@theme {
+  --font-heading: "Outfit", sans-serif;
+  --font-body: "Plus Jakarta Sans", sans-serif;
+
+  --color-background: #FFFDF5;
+  --color-foreground: #1E293B;
+  --color-muted: #F1F5F9;
+  --color-muted-foreground: #64748B;
+  --color-accent: #8B5CF6;
+  --color-secondary: #F472B6;
+  --color-tertiary: #FBBF24;
+  --color-quaternary: #34D399;
+  --color-border: #E2E8F0;
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+}
+
+html {
+  font-family: var(--font-body);
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background-color: var(--color-background);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+/* Sticker card shadow utility */
+.shadow-hard {
+  box-shadow: 4px 4px 0px var(--color-foreground);
+}
+.shadow-hard-hover {
+  box-shadow: 6px 6px 0px var(--color-foreground);
+}
+.shadow-hard-active {
+  box-shadow: 2px 2px 0px var(--color-foreground);
+}
+.shadow-hard-sm {
+  box-shadow: 3px 3px 0px var(--color-foreground);
+}
+
+/* Card back dots pattern */
+.pattern-dots {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.3) 1.5px, transparent 1.5px);
+  background-size: 12px 12px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
