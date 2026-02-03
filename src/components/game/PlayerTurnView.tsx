@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, Hand } from 'lucide-react'
+import { Zap, Hand, Shield } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import GameCard from './GameCard'
 import PlayerHand from './PlayerHand'
@@ -70,6 +70,23 @@ export default function PlayerTurnView({
           Total : <span className="font-600">{player.totalScore}</span>
         </p>
       </div>
+
+      {/* Second Chance banner */}
+      <AnimatePresence>
+        {roundState.hasSecondChance && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="flex items-center gap-2 px-4 py-2 bg-accent/15 border-2 border-accent rounded-2xl second-chance-glow"
+          >
+            <Shield size={18} strokeWidth={2.5} className="text-accent shrink-0" />
+            <span className="text-sm font-heading font-700 text-accent">
+              Second Chance active
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Deck + Hand layout */}
       <div className="flex items-start gap-4 w-full relative">

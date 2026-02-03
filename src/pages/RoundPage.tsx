@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { AnimatePresence, motion } from 'framer-motion'
-import { LogOut } from 'lucide-react'
+import { LogOut, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import ScoreBoard from '@/components/game/ScoreBoard'
@@ -514,6 +514,12 @@ export default function RoundPage() {
                   {/* Name + status */}
                   <div className="flex items-center gap-1.5">
                     <span className="font-heading font-600 text-xs">{player.name}</span>
+                    {rs.hasSecondChance && (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-accent text-white text-[9px] font-700 rounded-full leading-none second-chance-glow">
+                        <Shield size={10} strokeWidth={2.5} />
+                        2nd
+                      </span>
+                    )}
                     {rs.isBusted && (
                       <span className="px-1.5 py-0.5 bg-secondary text-white text-[9px] font-700 rounded-full leading-none">
                         BUST
