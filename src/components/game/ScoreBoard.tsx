@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react'
+import { Star, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import type { Player, PlayerRoundState } from '@/types/game'
@@ -46,9 +46,14 @@ export default function ScoreBoard({
                     <Star size={12} strokeWidth={2.5} className="text-tertiary fill-tertiary" />
                   )}
                 </div>
-                <span className="text-[11px] text-muted-foreground font-600 leading-none mt-0.5">
-                  {player.totalScore} pts
-                </span>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-[11px] text-muted-foreground font-600 leading-none">
+                    {player.totalScore} pts
+                  </span>
+                  {rs?.hasSecondChance && (
+                    <Shield size={12} strokeWidth={2.5} className="text-accent second-chance-glow rounded-full" />
+                  )}
+                </div>
               </div>
             </div>
           )

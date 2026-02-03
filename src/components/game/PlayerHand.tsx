@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import GameCard from './GameCard'
@@ -36,12 +36,20 @@ export default function PlayerHand({
       <div className="flex items-center justify-between mb-2">
         <span className="font-heading font-700 text-sm">{playerName}</span>
         <div className="flex items-center gap-1.5">
-          {state.hasSecondChance && (
-            <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-accent text-white text-[10px] font-700 rounded-full border border-foreground">
-              <Shield size={10} strokeWidth={2.5} />
-              2nd
-            </span>
-          )}
+          <AnimatePresence>
+            {state.hasSecondChance && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                className="inline-flex items-center gap-1 px-2.5 py-1 bg-accent text-white text-xs font-700 rounded-full border-2 border-foreground second-chance-glow"
+              >
+                <Shield size={14} strokeWidth={2.5} />
+                2nd Chance
+              </motion.span>
+            )}
+          </AnimatePresence>
           {state.isBusted && (
             <span className="px-2 py-0.5 bg-secondary text-white text-[10px] font-700 rounded-full border border-foreground">
               BUST
