@@ -56,6 +56,31 @@ export function buildDeck(): GameCard[] {
   return cards
 }
 
+/**
+ * Same as buildDeck but does NOT reset cardIdCounter.
+ * Used for mid-round reshuffling so new cards get unique IDs.
+ */
+export function rebuildDeck(): GameCard[] {
+  const cards: GameCard[] = []
+  for (let value = 12; value >= 1; value--) {
+    for (let i = 0; i < value; i++) {
+      cards.push(createNumberCard(value))
+    }
+  }
+  cards.push(createNumberCard(0))
+  const modifiers: ModifierType[] = ['x2', '+2', '+4', '+6', '+8', '+10']
+  for (const mod of modifiers) {
+    cards.push(createModifierCard(mod))
+  }
+  const actions: ActionType[] = ['freeze', 'flip-three', 'second-chance']
+  for (const action of actions) {
+    for (let i = 0; i < 3; i++) {
+      cards.push(createActionCard(action))
+    }
+  }
+  return cards
+}
+
 export function shuffleDeck(cards: GameCard[]): GameCard[] {
   const shuffled = [...cards]
   for (let i = shuffled.length - 1; i > 0; i--) {

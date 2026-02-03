@@ -8,7 +8,7 @@ import type {
   PlayerRoundState,
   RoundPhase,
 } from '@/types/game'
-import { buildDeck, shuffleDeck } from '@/lib/deck'
+import { buildDeck, rebuildDeck, shuffleDeck } from '@/lib/deck'
 import { calculateScore, hasDuplicateNumber, generateId } from '@/lib/utils'
 
 interface GameStore {
@@ -76,21 +76,65 @@ function hasAnyActivePlayer(roundStates: PlayerRoundState[]): boolean {
   )
 }
 
+/** Signature for a card based on its type and value/modifier/action. */
+function cardKey(card: GameCard): string {
+  if (card.type === 'number') return `n-${card.value}`
+  if (card.type === 'modifier') return `m-${card.modifier}`
+  return `a-${card.action}`
+}
+
+/** Collect all cards currently held by players in a round. */
+function collectRoundCards(roundStates: PlayerRoundState[]): GameCard[] {
+  const cards: GameCard[] = []
+  for (const rs of roundStates) {
+    cards.push(...rs.numberCards, ...rs.modifierCards, ...rs.actionCards)
+  }
+  return cards
+}
+
 /**
  * Draw a card from the deck, reshuffling discard if needed.
- * Returns [card, updatedDeck, updatedDiscard] without mutating.
+ * If both deck and discard are empty mid-round, rebuilds a fresh deck
+ * excluding cards currently in players' hands.
  */
 function drawFromDeck(
   deck: GameCard[],
   discardPile: GameCard[],
+  roundStates?: PlayerRoundState[],
 ): { card: GameCard; deck: GameCard[]; discardPile: GameCard[] } | null {
   let d = [...deck]
   let dp = [...discardPile]
 
   if (d.length === 0) {
-    if (dp.length === 0) return null
-    d = shuffleDeck(dp)
-    dp = []
+    if (dp.length > 0) {
+      d = shuffleDeck(dp)
+      dp = []
+    } else if (roundStates) {
+      // Both deck and discard are empty mid-round.
+      // Rebuild a full deck excluding cards currently in players' hands.
+      const inPlay = collectRoundCards(roundStates)
+      const toRemove = new Map<string, number>()
+      for (const c of inPlay) {
+        const key = cardKey(c)
+        toRemove.set(key, (toRemove.get(key) || 0) + 1)
+      }
+      const fresh = rebuildDeck()
+      d = []
+      for (const card of fresh) {
+        const key = cardKey(card)
+        const remaining = toRemove.get(key) || 0
+        if (remaining > 0) {
+          toRemove.set(key, remaining - 1)
+        } else {
+          d.push(card)
+        }
+      }
+      d = shuffleDeck(d)
+      dp = []
+      if (d.length === 0) return null
+    } else {
+      return null
+    }
   }
 
   const card = d.pop()!
@@ -140,8 +184,12 @@ export const useGameStore = create<GameStore>()(
       startRound: () => {
         const { session } = get()
         if (!session) return
+
+        // Return all cards from the previous round back to the discard pile
+        const returnedCards = collectRoundCards(session.roundStates)
+        let discardPile = [...session.discardPile, ...returnedCards]
         let deck = [...session.deck]
-        let discardPile = [...session.discardPile]
+
         if (deck.length === 0) {
           deck = shuffleDeck(discardPile)
           discardPile = []
@@ -209,7 +257,7 @@ export const useGameStore = create<GameStore>()(
         const { session } = get()
         if (!session) return null
 
-        const draw = drawFromDeck(session.deck, session.discardPile)
+        const draw = drawFromDeck(session.deck, session.discardPile, session.roundStates)
         if (!draw) return null
 
         const { card } = draw
@@ -378,7 +426,7 @@ export const useGameStore = create<GameStore>()(
         const { session } = get()
         if (!session) return null
 
-        const draw = drawFromDeck(session.deck, session.discardPile)
+        const draw = drawFromDeck(session.deck, session.discardPile, session.roundStates)
         if (!draw) return null
 
         const { card } = draw
@@ -557,7 +605,7 @@ export const useGameStore = create<GameStore>()(
         const { session } = get()
         if (!session?.flipThreeState) return null
 
-        const draw = drawFromDeck(session.deck, session.discardPile)
+        const draw = drawFromDeck(session.deck, session.discardPile, session.roundStates)
         if (!draw) return null
 
         const { card } = draw
