@@ -10,6 +10,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        navigateFallbackDenylist: [/^\/saber-inclusivo/],
+      },
       manifest: {
         name: 'Flip 7',
         short_name: 'Flip7',
