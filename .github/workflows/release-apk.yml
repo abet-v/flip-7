@@ -1,0 +1,47 @@
+name: Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.0.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create release with APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: Roue des Saisons ${{ steps.tag.outputs.name }}
+          body: |
+            Android app — roue des 4 saisons.
+
+            - **Mode cycle**: touche la roue pour passer à la saison suivante
+            - **Mode sélection**: touche un quartier pour choisir directement
+            - La saison sélectionnée est sauvegardée entre les lancements
+
+            Installer `roue-des-saisons.apk` sur un appareil Android (API 24+).
+          files: roue-des-saisons.apk
+          draft: false
+          prerelease: false
